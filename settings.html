@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>BabyNest</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container setting-page">
+       <!-- ✅ Home Button goes here -->
+       <div class="header-bar">
+        <button class="home-button" onclick="location.href='index.html'">🏠</button>
+      </div>
+ 
+        <!-- User Profile Section -->
+        <div class="profile-section">
+            <h2 class="profile-title">Settings & User Profile</h2>
+            <div class="profile-info">
+                <p><strong>Name:</strong> <span id="user-name">Loading...</span></p>
+                <p class="email-style"><strong>Email:</strong> <span id="registered-email">Loading...</span></p>
+            </div>
+        </div>
+
+        <div class="form-setting">
+  <label for="child-select">Children:</label>
+  <select id="child-select" class="child-dropdown">
+    <option value="">Child list</option>
+    <!-- Options will be injected via JS -->
+  </select>
+</div>
+
+        <!-- Relationship Dropdown (Unique Class Name) -->
+        <div class="form-setting">
+            <label for="relationship-select">Relationship with Child:</label>
+            <select id="relationship-select" class="relationship-dropdown"> <!-- ✅ Changed Class Name -->
+                <option value="">Select</option>
+                <option value="Mother">Mother</option>
+                <option value="Father">Father</option>
+                <option value="Sibling">Sibling</option>
+                <option value="Relative">Relative</option>
+                <option value="Teacher">Teacher</option>
+                <option value="Nanny">Nanny</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <!-- Font Size Adjustment -->
+        <div class="form-setting">
+            <label for="font-size-select">Font Size:</label>
+            <select id="font-size-select" onchange="changeFontSize()">
+              <option value="small">Small</option>
+              <option value="medium" selected>Medium</option>
+              <option value="large">Large</option>
+            </select>
+        </div>
+
+        <!-- Change Password Section -->
+        <div class="password-section">
+            <label for="new-password">Change Password:</label>
+            <div class="password-input-container">
+              <input type="password" id="new-password" placeholder="Enter new password" />
+              <button id="update-password-btn">Update</button>
+            </div>
+          </div>
+
+        <!-- Logout & Delete Account -->
+        <button class="btn-red" onclick="deleteAccount()">❌ Delete Account</button>
+
+        <!-- Back Button
+        <button onclick="location.href='index.html'" class="btn-back">⬅ Back</button-->
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
+

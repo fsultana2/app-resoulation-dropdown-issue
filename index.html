@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BabyNest</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Preload pages for faster navigation -->
+    <link rel="prefetch" href="child-profile.html">
+    <link rel="prefetch" href="feeding-tracker.html">
+    <link rel="prefetch" href="sleep-tracker.html">
+    <script src="main.js" defer></script>
+</head>
+<body class="homepage">
+    <!-- Header with Settings and Add Child -->
+    <div class="container">
+        <div class="header">
+            <!-- Dropdown Menu -->
+            <div class="dropdown">
+                <button class="dropdown-button">☰</button>
+                <div class="dropdown-content" id="dropdownMenu">
+                    <!--a href="profile.html">Profile</a-->
+                    <a href="settings.html">Settings & User Profile</a>
+                    <a href="logout.html">Logout</a>
+                </div>
+            </div>
+        
+            <!-- Profile Image & Upload Photo Button -->
+            <div class="profile-img-container">
+                <div class="profile-img" id="profile-img-main" onclick="document.getElementById('upload-photo-main').click()"></div>
+                <input type="file" id="upload-photo-main" accept="image/*" style="display:none" onchange="loadPhoto(event, 'profile-img-main')">
+                <button class="upload-button" onclick="document.getElementById('upload-photo-main').click()">Upload</button>
+            </div>
+        
+            <button class="add-child-btn">🚼 Add</button>
+        </div>
+        
+
+        <!-- Child Selection Dropdown -->
+        <div class="child-selection">
+            <label for="child-dropdown" id="selected-child-name">Current Child: None</label>
+            <select id="child-dropdown" onchange="switchChild()">
+                <option value="">Select Child</option>
+            </select>
+        </div>
+        
+        <!-- Feeding Tracker -->
+        <div class="section">
+            <h2>Feeding Tracker</h2>
+            <p id="feeding-summary"><span class='baby-bottle-icon'>🍼</span> Last Feeding: None | Total: 0 oz</p>
+            <button onclick="location.assign('feeding-tracker.html')">Log Feeding</button>
+        </div>
+
+        <!-- Sleep Tracker -->
+        <div class="section">
+            <h2>Sleep Tracker</h2>
+            <p id="sleep-summary"><span class="zzz-icon">💤</span> Last Sleep: None | Total: 0.00 hours</p>
+            <button onclick="location.assign('sleep-tracker.html')">Log Sleep</button>
+        </div>
+
+        <!-- Other Trackers -->
+        <div class="section"><h2>Diaper & Bowel Tracker</h2><button onclick="location.assign('diaper-tracker.html')">Log Diaper Change</button></div>
+        <div class="section"><h2>Play & Tummy Time Tracker</h2><button onclick="location.assign('play-tracker.html')">Log Play & Tummy Time</button></div>
+        <div class="section"><h2>Audio Section - Lullaby</h2><button onclick="location.assign('lullaby.html')">Play Lullaby</button></div>
+        <div class="section"><h2>Reports & Insights</h2><button onclick="location.assign('reports.html')">View Reports</button></div>
+    </div>
+
+    <script>
+function toggleDropdown(event) {
+    event.stopPropagation(); // Prevents closing immediately when clicking the button
+
+    let dropdown = document.getElementById("dropdownMenu");
+    let button = document.querySelector(".dropdown-button");
+
+    let isOpen = dropdown.classList.contains("show");
+
+    // Close all dropdowns before toggling the current one
+    document.querySelectorAll(".dropdown-content").forEach(menu => menu.classList.remove("show"));
+    document.querySelectorAll(".dropdown-button").forEach(btn => btn.classList.remove("active"));
+
+    if (!isOpen) {
+        dropdown.classList.add("show");
+        button.classList.add("active"); // ✅ Background appears when open
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && !button.contains(e.target)) {
+                dropdown.classList.remove("show");
+                button.classList.remove("active"); // ✅ Background disappears when closed
+                document.removeEventListener("click", closeDropdown);
+            }
+        });
+    } else {
+        dropdown.classList.remove("show");
+        button.classList.remove("active"); // ✅ Background disappears when closed
+    }
+}
+
+// Attach event listener correctly
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelector(".dropdown-button").addEventListener("click", toggleDropdown);
+    document.querySelector(".add-child-btn").addEventListener("click", function () {
+                window.location.href = 'child-profile.html';
+            });
+});
+        /* Attach event listeners
+        document.addEventListener("DOMContentLoaded", function () {
+    document.querySelector(".dropdown-button").addEventListener("click", toggleDropdown);
+            document.querySelector(".add-child-btn").addEventListener("click", function () {
+                window.location.href = 'child-profile.html';
+            });
+        });*/
+
+        function loadPhoto(event, imgId) {
+            let reader = new FileReader();
+            reader.onload = function() { document.getElementById(imgId).style.backgroundImage = `url(${reader.result})`; };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        if (!localStorage.getItem("isLoggedIn")) {
+            location.replace("login.html");
+        }
+
+        window.onload = function () {
+            setTimeout(() => {  // ✅ Delays non-essential tasks
+                let selectedChildName = localStorage.getItem("selectedChildName");
+                if (selectedChildName) {
+                    document.getElementById("selected-child-name").textContent = `Current Child: ${selectedChildName}`;
+                }
+                loadChildDropdown();
+                updateFeedingSummary();
+                updateSleepSummary();
+            }, 50);
+        };
+
+        function loadChildDropdown() {
+            let childList = JSON.parse(localStorage.getItem("children")) || [];
+            let dropdown = document.getElementById("child-dropdown");
+            dropdown.innerHTML = '';
+
+            childList.forEach((child, index) => {
+                let option = document.createElement("option");
+                option.value = index;
+                option.textContent = child.name;
+                if (localStorage.getItem("selectedChild") == index) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
+        }
+
+        function switchChild() {
+            let dropdown = document.getElementById("child-dropdown");
+            let selectedIndex = dropdown.value;
+            if (selectedIndex !== "") {
+                let childList = JSON.parse(localStorage.getItem("children")) || [];
+                localStorage.setItem("selectedChild", selectedIndex);
+                localStorage.setItem("selectedChildName", childList[selectedIndex].name);
+                document.getElementById("selected-child-name").textContent = `Current Child: ${childList[selectedIndex].name}`;
+                updateFeedingSummary();
+                updateSleepSummary();
+            }
+        }
+
+        function updateFeedingSummary() {
+            requestAnimationFrame(() => {
+                let selectedChild = localStorage.getItem("selectedChild");
+                let feedingData = JSON.parse(localStorage.getItem("feedingData")) || {};
+                if (feedingData[selectedChild]) {
+                    let lastFeeding = feedingData[selectedChild].lastFeeding || "None";
+                    let totalOunces = feedingData[selectedChild].totalOunces || 0;
+                    document.getElementById("feeding-summary").innerHTML = `🍼 Last Feeding: ${lastFeeding} | Total: ${totalOunces} oz`;
+                }
+            });
+        }
+
+        function updateSleepSummary() {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let sleepData = JSON.parse(localStorage.getItem("sleepData")) || {};
+
+            if (!sleepData[selectedChild]) return;
+
+            let { logs = [], totalHours = 0 } = sleepData[selectedChild];
+            let lastSleepEntry = logs.length ? logs[logs.length - 1] : null;
+            let lastSleepText = lastSleepEntry ? `${lastSleepEntry.startTime} - ${lastSleepEntry.endTime}` : "None";
+
+            document.getElementById("sleep-summary").innerHTML = `
+                <span class="zzz-icon">💤</span> Last Sleep: ${lastSleepText} | Total: ${totalHours.toFixed(2)} hours
+            `;
+        }
+    </script>
+</body>
+</html>

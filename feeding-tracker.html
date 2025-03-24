@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Feeding Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <button class="btn-red" onclick="goBack()">⬅ Back</button>
+        <h1>Feeding Tracker</h1>
+        
+        <label>Feeding Time:</label>
+        <input type="time" id="feeding-time">
+        <label>Oz:</label>
+        <input type="number" id="feeding-oz" placeholder="Enter oz" style="width: 60px;">
+
+        <button class="btn-green" onclick="logFeeding()">Save Feeding</button>
+
+        <h2>Feeding Summary</h2>
+        <p id="feeding-summary"><span class='baby-bottle-icon'>🍼</span> Last Feeding: None | Total: 0 oz</p>
+
+        <ul id="feeding-log"></ul>
+
+        <!-- Delete All Button -->
+        <button class="btn-red" onclick="deleteAllFeedingLogs()">❌ Delete All Feeding Logs</button>
+    </div>
+
+    <script>
+        function goBack() {
+            location.href = 'index.html';
+        }
+
+        function logFeeding() {
+            let time = document.getElementById("feeding-time").value;
+            let oz = parseInt(document.getElementById("feeding-oz").value);
+            let selectedChild = localStorage.getItem("selectedChild");
+
+            if (selectedChild !== null && time && oz) {
+                let feedingData = JSON.parse(localStorage.getItem("feedingData")) || {};
+
+                if (!feedingData[selectedChild]) {
+                    feedingData[selectedChild] = { logs: [], totalOunces: 0, lastFeeding: "None" };
+                }
+
+                // Store feeding entry
+                feedingData[selectedChild].logs.push({ time, oz });
+                feedingData[selectedChild].totalOunces += oz;
+                feedingData[selectedChild].lastFeeding = time;
+
+                // Save to localStorage
+                localStorage.setItem("feedingData", JSON.stringify(feedingData));
+
+                // Update UI
+                updateFeedingLog();
+                updateFeedingSummary();
+            } else {
+                alert("Please select a child and enter valid feeding details.");
+            }
+        }
+
+        function updateFeedingLog() {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let feedingData = JSON.parse(localStorage.getItem("feedingData")) || {};
+            let logContainer = document.getElementById("feeding-log");
+            logContainer.innerHTML = "";
+
+            if (feedingData[selectedChild] && feedingData[selectedChild].logs.length > 0) {
+                feedingData[selectedChild].logs.forEach((entry, index) => {
+                    let listItem = document.createElement("div");
+                    listItem.classList.add("feeding-log-item");
+
+                    listItem.innerHTML = `
+                        <div class="feeding-log-entry">
+                            <!-- Summary View -->
+                            <span class="feeding-summary-text">
+                                <strong>Time:</strong> ${formatTime(entry.time)} 
+                                <strong>Oz:</strong> ${entry.oz}
+                            </span>
+
+                            <!-- Hidden Editable Inputs -->
+                            <div class="feeding-edit-form" style="display: none;">
+                                <label>Time:</label>
+                                <input type="time" value="${entry.time}" class="time-input" id="time-${index}">
+                                
+                                <label>Oz:</label>
+                                <input type="number" value="${entry.oz}" class="oz-input" id="oz-${index}">
+                                
+                                <button class="btn-green" onclick="saveEdit(${index})">Save</button>
+                            </div>
+
+                            <!-- Edit/Delete Dropdown -->
+                            <div class="dropdown">
+                                <button class="dropbtn">✏️</button>
+                                <div class="dropdown-content">
+                                    <a href="#" onclick="toggleEdit(${index})">Edit</a>
+                                    <a href="#" onclick="deleteFeeding(${index})">Delete</a>
+                                </div>
+                            </div>
+                        </div>`;
+
+                    logContainer.appendChild(listItem);
+                });
+            } else {
+                logContainer.innerHTML = "<p>No feeding logs available.</p>";
+            }
+        }
+
+        function updateFeedingSummary() {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let feedingData = JSON.parse(localStorage.getItem("feedingData")) || {};
+            if (feedingData[selectedChild]) {
+                let lastFeeding = feedingData[selectedChild].lastFeeding || "None";
+                let totalOunces = feedingData[selectedChild].totalOunces || 0;
+                document.getElementById("feeding-summary").innerHTML = `<span class="baby-bottle-icon">🍼</span> Last Feeding: ${lastFeeding} | Total: ${totalOunces} oz`;
+            }
+        }
+
+        function toggleEdit(index) {
+            let summaryText = document.querySelectorAll(".feeding-summary-text")[index];
+            let editForm = document.querySelectorAll(".feeding-edit-form")[index];
+
+            if (editForm.style.display === "none") {
+                editForm.style.display = "block";
+                summaryText.style.display = "none"; 
+            } else {
+                editForm.style.display = "none";
+                summaryText.style.display = "block"; 
+            }
+        }
+
+        function saveEdit(index) {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let feedingData = JSON.parse(localStorage.getItem("feedingData")) || {};
+            
+            let newTime = document.getElementById(`time-${index}`).value;
+            let newOz = document.getElementById(`oz-${index}`).value;
+
+            if (feedingData[selectedChild] && feedingData[selectedChild].logs[index]) {
+                feedingData[selectedChild].logs[index].time = newTime;
+                feedingData[selectedChild].logs[index].oz = newOz;
+                localStorage.setItem("feedingData", JSON.stringify(feedingData));
+                updateFeedingLog();
+                updateFeedingSummary();
+            }
+        }
+
+        function deleteFeeding(index) {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let feedingData = JSON.parse(localStorage.getItem("feedingData")) || {};
+            if (feedingData[selectedChild] && feedingData[selectedChild].logs[index]) {
+                feedingData[selectedChild].logs.splice(index, 1);
+                feedingData[selectedChild].totalOunces = feedingData[selectedChild].logs.reduce((sum, log) => sum + parseInt(log.oz), 0);
+                if (feedingData[selectedChild].logs.length > 0) {
+                    feedingData[selectedChild].lastFeeding = feedingData[selectedChild].logs[feedingData[selectedChild].logs.length - 1].time;
+                } else {
+                    feedingData[selectedChild].lastFeeding = "None";
+                }
+                localStorage.setItem("feedingData", JSON.stringify(feedingData));
+                updateFeedingLog();
+                updateFeedingSummary();
+            }
+        }
+
+        function deleteAllFeedingLogs() {
+            let selectedChild = localStorage.getItem("selectedChild");
+            if (confirm("Are you sure you want to delete all feeding logs?")) {
+                let feedingData = JSON.parse(localStorage.getItem("feedingData")) || {};
+                if (feedingData[selectedChild]) {
+                    feedingData[selectedChild].logs = [];
+                    feedingData[selectedChild].totalOunces = 0;
+                    feedingData[selectedChild].lastFeeding = "None";
+                    localStorage.setItem("feedingData", JSON.stringify(feedingData));
+                    updateFeedingLog();
+                    updateFeedingSummary();
+                }
+            }
+        }
+
+        function formatTime(time) {
+            let [hours, minutes] = time.split(":");
+            let ampm = hours >= 12 ? "PM" : "AM";
+            hours = hours % 12 || 12; // Convert 24-hour format to 12-hour
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        window.onload = function () {
+            updateFeedingLog();
+            updateFeedingSummary();
+        };
+    </script>
+</body>
+</html>

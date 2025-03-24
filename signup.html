@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup - BabyNest App</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div class="container signup-page">
+        <h1>Signup</h1>
+        <form id="signup-form" class="signup-form" onsubmit="registerUser(event)">
+            <div class="signup-group">
+                <label for="first-name">First Name:</label>
+                <input type="text" id="first-name" placeholder="Enter First Name" required>
+            </div>
+            <div class="signup-group">
+                <label for="middle-name">Middle Name (Optional):</label>
+                <input type="text" id="middle-name" placeholder="Enter Middle Name">
+            </div>
+            <div class="signup-group">
+                <label for="last-name">Last Name:</label>
+                <input type="text" id="last-name" placeholder="Enter Last Name" required>
+            </div>
+            <div class="signup-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="Enter Email" required>
+            </div>
+            <div class="signup-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter Password" required>
+            </div>
+            <div class="signup-group">
+                <label for="confirm-password">Confirm Password:</label>
+                <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+            </div>
+            <button type="submit" class="btn-green">Signup</button>
+        </form>
+        <p>Already have an account? <a href="login.html">Login</a></p>
+    </div>
+
+    <script>
+        function registerUser(event) {
+            event.preventDefault(); // Prevent page refresh
+
+            let firstName = document.getElementById("first-name").value.trim();
+            let lastName = document.getElementById("last-name").value.trim();
+            let email = document.getElementById("email").value.trim();
+            let password = document.getElementById("password").value;
+            let confirmPassword = document.getElementById("confirm-password").value;
+
+            // Validation
+            if (!firstName || !lastName || !email || !password || !confirmPassword) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+            if (password !== confirmPassword) {
+                alert("Passwords do not match.");
+                return;
+            }
+
+            // ✅ Fix: Store full name as "name"
+            let userData = {
+                name: `${firstName} ${lastName}`.trim(), 
+                email: email,
+                password: password
+            };
+
+            // ✅ Save user info correctly
+            localStorage.setItem("user", JSON.stringify(userData));
+            localStorage.setItem("userEmail", email); // Store email separately for easy access
+
+            alert("Signup successful! Redirecting to login...");
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>

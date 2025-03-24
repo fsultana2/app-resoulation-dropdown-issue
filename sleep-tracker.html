@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sleep Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <button class="btn-red" onclick="goBack()">⬅ Back</button>
+        <h1>Sleep Tracker</h1>
+
+        <div class="sleep-time-container">
+            <label for="sleep-start">Sleep Start Time:</label>
+            <input type="time" id="sleep-start">
+        </div>
+
+        <div class="sleep-time-container">
+            <label for="sleep-end">Sleep End Time:</label>
+            <input type="time" id="sleep-end">
+        </div>
+
+        <button class="btn-green" onclick="logSleep()">Save Sleep</button>
+
+        <h2>Sleep Summary</h2>
+        <p id="sleep-summary"><span class="zzz-icon">💤</span> Total Sleep: 0.00 hours</p>
+
+        <div id="sleep-log"></div>
+
+        <!-- 🛑 "Delete All" Button -->
+        <button class="btn-red" onclick="deleteAllSleepLogs()">❌ Delete All Sleep Logs</button>
+    </div>
+
+    <script>
+        function goBack() {
+            location.href = 'index.html';
+        }
+
+        function logSleep() {
+            let startTime = document.getElementById("sleep-start").value;
+            let endTime = document.getElementById("sleep-end").value;
+            let selectedChild = localStorage.getItem("selectedChild");
+
+            if (selectedChild !== null && startTime && endTime) {
+                let sleepData = JSON.parse(localStorage.getItem("sleepData")) || {};
+
+                if (!sleepData[selectedChild]) {
+                    sleepData[selectedChild] = { logs: [], totalHours: 0 };
+                }
+
+                let sleepDuration = calculateSleepDuration(startTime, endTime);
+                sleepData[selectedChild].logs.push({ startTime, endTime, duration: sleepDuration });
+                sleepData[selectedChild].totalHours += sleepDuration;
+
+                localStorage.setItem("sleepData", JSON.stringify(sleepData));
+
+                updateSleepLog();
+                updateSleepSummary();
+
+                document.getElementById("sleep-start").value = "";
+                document.getElementById("sleep-end").value = "";
+            } else {
+                alert("Please enter valid sleep details.");
+            }
+        }
+
+        function calculateSleepDuration(startTime, endTime) {
+            let start = new Date(`1970-01-01T${startTime}Z`);
+            let end = new Date(`1970-01-01T${endTime}Z`);
+            let duration = (end - start) / 3600000;
+            return duration > 0 ? duration : (24 + duration);
+        }
+
+        function updateSleepLog() {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let sleepData = JSON.parse(localStorage.getItem("sleepData")) || {};
+            let logContainer = document.getElementById("sleep-log");
+            logContainer.innerHTML = "";
+
+            if (sleepData[selectedChild] && sleepData[selectedChild].logs.length > 0) {
+                sleepData[selectedChild].logs.forEach((entry, index) => {
+                    let listItem = document.createElement("div");
+                    listItem.classList.add("sleep-log-item");
+
+                    listItem.innerHTML = `
+                        <div class="sleep-log-entry">
+                            <span><strong>Time:</strong> ${formatTime(entry.startTime)} - ${formatTime(entry.endTime)}</span>
+                            <span><strong>Total:</strong> ${entry.duration.toFixed(2)} hours</span>
+
+                            <div class="dropdown">
+                                <button class="dropbtn">✏️</button>
+                                <div class="dropdown-content">
+                                    <a href="#" onclick="editSleep(${index})">Edit</a>
+                                    <a href="#" onclick="deleteSleep(${index})">Delete</a>
+                                </div>
+                            </div>
+                        </div>`;
+
+                    logContainer.appendChild(listItem);
+                });
+            } else {
+                logContainer.innerHTML = "<p>No sleep logs available.</p>";
+            }
+        }
+
+        function formatTime(time) {
+            let [hour, minute] = time.split(":");
+            let period = "AM";
+
+            hour = parseInt(hour);
+            if (hour >= 12) {
+                period = "PM";
+                if (hour > 12) hour -= 12;
+            } else if (hour === 0) {
+                hour = 12;
+            }
+
+            return `${hour}:${minute} ${period}`;
+        }
+
+        function updateSleepSummary() {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let sleepData = JSON.parse(localStorage.getItem("sleepData")) || {};
+
+            if (sleepData[selectedChild]) {
+                let totalHours = sleepData[selectedChild].totalHours || 0;
+                let lastSleep = sleepData[selectedChild].logs.length > 0
+                    ? `${formatTime(sleepData[selectedChild].logs[sleepData[selectedChild].logs.length - 1].startTime)} - ${formatTime(sleepData[selectedChild].logs[sleepData[selectedChild].logs.length - 1].endTime)}`
+                    : "None";
+
+                document.getElementById("sleep-summary").innerHTML = `
+                    <span class="zzz-icon">💤</span> Last Sleep: ${lastSleep} | Total: ${totalHours.toFixed(2)} hours
+                `;
+            }
+        }
+
+        function editSleep(index) {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let sleepData = JSON.parse(localStorage.getItem("sleepData")) || {};
+
+            if (sleepData[selectedChild] && sleepData[selectedChild].logs[index]) {
+                let entry = sleepData[selectedChild].logs[index];
+
+                let newStartTime = prompt("Enter new start time:", entry.startTime);
+                let newEndTime = prompt("Enter new end time:", entry.endTime);
+
+                if (newStartTime && newEndTime) {
+                    entry.startTime = newStartTime;
+                    entry.endTime = newEndTime;
+                    entry.duration = calculateSleepDuration(newStartTime, newEndTime);
+
+                    localStorage.setItem("sleepData", JSON.stringify(sleepData));
+                    updateSleepLog();
+                    updateSleepSummary();
+                }
+            }
+        }
+
+        function deleteSleep(index) {
+            let selectedChild = localStorage.getItem("selectedChild");
+            let sleepData = JSON.parse(localStorage.getItem("sleepData")) || {};
+
+            if (sleepData[selectedChild] && sleepData[selectedChild].logs[index]) {
+                sleepData[selectedChild].logs.splice(index, 1);
+                localStorage.setItem("sleepData", JSON.stringify(sleepData));
+                updateSleepLog();
+                updateSleepSummary();
+            }
+        }
+
+        function deleteAllSleepLogs() {
+            let selectedChild = localStorage.getItem("selectedChild");
+
+            if (confirm("Are you sure you want to delete ALL sleep logs?")) {
+                let sleepData = JSON.parse(localStorage.getItem("sleepData")) || {};
+
+                if (sleepData[selectedChild]) {
+                    sleepData[selectedChild].logs = [];
+                    sleepData[selectedChild].totalHours = 0;
+                    localStorage.setItem("sleepData", JSON.stringify(sleepData));
+                }
+
+                updateSleepLog();
+                updateSleepSummary();
+                /*alert("All sleep logs deleted successfully!");*/
+            }
+        }
+
+        window.onload = function () {
+            updateSleepLog();
+            updateSleepSummary();
+        };
+    </script>
+</body>
+</html>

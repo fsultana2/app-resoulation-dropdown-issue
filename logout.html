@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container logout-container">
+        <h1 style="font-size: 25px;">Are you sure you want to log out?</h1>
+        <button class="btn-red logout-btn" onclick="confirmLogout()">👋 Yes, Logout</button>
+        <button class="btn-cancel logout-btn" onclick="cancelLogout()">Cancel</button>
+    </div>
+
+    <script>
+        function confirmLogout() {
+            alert("You have been logged out successfully.");
+            localStorage.removeItem("isLoggedIn");
+            window.location.href = "login.html"; /* Redirect to login page */
+        }
+        
+        function cancelLogout() {
+            window.history.back(); /* Go back to the previous page */
+        }
+            function animateByeBye() {
+    let byeText = document.getElementById("bye-bye");
+    byeText.style.opacity = "1";
+    byeText.style.transform = "translateX(5px) rotate(20deg)";
+    byeText.style.transition = "opacity 1.5s ease-in-out, transform 1s ease-in-out";
+}
+        
+        document.querySelector(".btn-red").addEventListener("click", animateByeBye);
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Child Profile Management</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div class="container child-profile">
+        <div class="header-bar">
+            <button class="home-button" onclick="location.href='index.html'">🏠</button>
+          </div>
+        <h1>Child Profiles</h1>
+
+        <!-- Input Fields for Adding a Child -->
+        <input type="text" id="child-name" placeholder="Child Name">
+        <input type="date" id="child-birthdate">
+        <button onclick="addChild()">Add Child</button>
+
+        <!-- Child List -->
+        <div id="child-list"></div>
+
+        <!-- Back Button 
+        <button onclick="location.href='index.html'" class="btn-red">⬅ Back</button-->
+    </div>
+
+    <script>
+        function addChild() {
+            let name = document.getElementById("child-name").value;
+            let birthdate = document.getElementById("child-birthdate").value;
+
+            if (name && birthdate) {
+                let childList = JSON.parse(localStorage.getItem("children")) || [];
+                childList.push({ name, birthdate });
+                localStorage.setItem("children", JSON.stringify(childList));
+                updateChildList();
+            }
+        }
+
+        function updateChildList() {
+            let childList = JSON.parse(localStorage.getItem("children")) || [];
+            let listContainer = document.getElementById("child-list");
+            listContainer.innerHTML = "";
+
+            childList.forEach((child, index) => {
+                let childDiv = document.createElement("div");
+                childDiv.className = "child-item";
+
+                // ✅ Fixed: Calculate correct age dynamically
+                let age = calculateAge(child.birthdate);
+
+                childDiv.innerHTML = `
+                    <span class="child-icon">👶</span>
+                    <span class="child-name">${child.name}</span>
+                    <span class="child-age">(${age} years old)</span>
+                    <button class="delete-btn" data-index="${index}">❌</button>
+                `;
+
+                listContainer.appendChild(childDiv);
+            });
+
+            // ✅ Fixed: Attach event listeners to X buttons
+            document.querySelectorAll(".delete-btn").forEach(button => {
+                button.addEventListener("click", function(event) {
+                    event.stopPropagation();
+                    let index = this.getAttribute("data-index");
+                    removeChild(index);
+                });
+            });
+        }
+
+        // ✅ Fixed: Age calculation based on actual date
+        function calculateAge(birthdate) {
+            if (!birthdate) return 0; // Ensure birthdate is provided
+            let birth = new Date(birthdate);
+            let today = new Date();
+
+            let age = today.getFullYear() - birth.getFullYear();
+            let monthDiff = today.getMonth() - birth.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+
+            return age >= 0 ? age : 0; // Prevent negative age values
+        }
+
+        function removeChild(index) {
+            let childList = JSON.parse(localStorage.getItem("children")) || [];
+            childList.splice(index, 1);
+            localStorage.setItem("children", JSON.stringify(childList));
+            updateChildList();
+        }
+
+        function selectChild(index) {
+            localStorage.setItem("selectedChild", index);
+            let childList = JSON.parse(localStorage.getItem("children")) || [];
+            if (childList[index]) {
+                localStorage.setItem("selectedChildName", childList[index].name);
+            }
+            location.href = 'index.html';
+        }
+
+        window.onload = function() {
+            updateChildList();
+        };
+    </script>
+</body>
+</html>
